@@ -1,5 +1,6 @@
 package com.pndb;
 
+import javafx.beans.property.ReadOnlyDoubleProperty;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.input.KeyCode;
 import javafx.scene.paint.Color;
@@ -16,20 +17,23 @@ public class TextState {
     private double X_PADDING = 2.0d;
     private double Y_PADDING = 10.0d;
     private int lineNumber = 0;
-    private LL buff = new LL();
     private double initial_X = 0.0d, initial_Y = 30.0d;
     private double X = initial_X, Y = initial_Y;
     private double minCharWidth = Integer.MIN_VALUE;
     private double minCharHeight = Integer.MIN_VALUE;
-    private Font font = new Font("Arial", 24);
-    private int APP_WIDTH, APP_HEIGHT;
+    private Font font = new Font("Arial", 14);
+    static LL buff = new LL();
+    static double APP_WIDTH, APP_HEIGHT;
 
-    TextState(GraphicsContext gc, int w, int h) {
+    TextState(GraphicsContext gc, ReadOnlyDoubleProperty w, ReadOnlyDoubleProperty h) {
         this.gc = gc;
-        this.APP_WIDTH = w;
-        this.APP_HEIGHT = h;
+        APP_WIDTH = w.getValue();
+        APP_HEIGHT = h.getValue();
         this.findFontDimensions();
-        CURSOR_HEIGHT = minCharHeight;
+        this.CURSOR_HEIGHT = minCharHeight;
+        // this.X_PADDING = (0.05d * minCharWidth);
+        // this.Y_PADDING =  (0.05d * minCharHeight);
+        // this.initial_Y = Y_PADDING;
         this.gc.setFont(font);
         this.gc.setFill(Color.BLACK);
         capsOn = Toolkit.getDefaultToolkit().getLockingKeyState(java.awt.event.KeyEvent.VK_CAPS_LOCK);
@@ -39,7 +43,7 @@ public class TextState {
     }
 
     String alphabetToDraw(KeyCode k) {
-        if(capsOn) {
+        if (capsOn) {
             return k.getChar();
         } else {
             return k.getChar().toLowerCase();
@@ -52,11 +56,15 @@ public class TextState {
 
     void calculateY() {
         Y = initial_Y + (lineNumber * (minCharHeight + Y_PADDING));
+        if (Y + minCharHeight > APP_HEIGHT) {
+            Y = this.initial_Y;
+            lineNumber = 0;
+        }
     }
 
     void calculateCursorPosition() {
         this.calculateX();
-        if (X + minCharWidth > this.APP_WIDTH) {
+        if (X + minCharWidth > APP_WIDTH) {
             X = 0;
             lineNumber++;
             this.calculateY();

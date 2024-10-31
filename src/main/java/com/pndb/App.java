@@ -5,6 +5,7 @@ import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 
 import java.io.IOException;
@@ -16,21 +17,33 @@ public class App extends Application {
 
     // private static Scene scene;
     private Pane pane;
-    private int WIDTH = 640, HEIGHT = 480;
+    private int WIDTH = 400, HEIGHT = 300;
+    private TextState textState;
+    private GraphicsContext gc;
 
     @Override
     public void start(Stage stage) throws IOException {
-        pane = new Pane();
+        pane = new StackPane();
         Scene scene = new Scene(pane, WIDTH, HEIGHT);
-        Canvas canvas = new Canvas(WIDTH, HEIGHT);
-        GraphicsContext gc = canvas.getGraphicsContext2D();
-    
+        Canvas canvas = new Canvas();
+
         canvas.requestFocus();
         canvas.setFocusTraversable(true);
+        canvas.widthProperty().bind(pane.widthProperty());
+        canvas.heightProperty().bind(pane.heightProperty());
+        gc = canvas.getGraphicsContext2D();
+        textState = new TextState(gc, pane.widthProperty(), pane.heightProperty());
+        canvas.widthProperty().addListener((obs, oldVal, newVal) -> {
+            TextState.APP_WIDTH = newVal.doubleValue();
+        });
+        canvas.heightProperty().addListener((obs, oldVal, newVal) -> {
+            TextState.APP_HEIGHT = newVal.doubleValue();
+        });
+
         pane.getChildren().add(canvas);
-        TextState textState = new TextState(gc, WIDTH, HEIGHT);
+
         canvas.setOnKeyPressed(event -> {
-            // System.out.println("event ::" + event.getCode()); 
+            // System.out.println("event ::" + event.getCode());
             textState.handleKeyPress(event.getCode());
         });
         stage.setScene(scene);
@@ -38,7 +51,7 @@ public class App extends Application {
     }
 
     public static void main(String[] args) {
-        launch();
+        launch(args);
     }
 
 }
