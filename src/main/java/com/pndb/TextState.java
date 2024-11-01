@@ -10,39 +10,39 @@ import javafx.scene.text.Text;
 import java.awt.Toolkit;
 
 public class TextState {
-    GraphicsContext gc;
-    private boolean capsOn = false;
-    private double CURSOR_WIDTH = 1.0d;
-    private double CURSOR_HEIGHT = 20.0d;
-    private double X_PADDING = 2.0d;
-    private double Y_PADDING = 10.0d;
-    private int lineNumber = 0;
-    private double initial_X = 0.0d, initial_Y = 30.0d;
-    private double X = initial_X, Y = initial_Y;
-    private double minCharWidth = Integer.MIN_VALUE;
-    private double minCharHeight = Integer.MIN_VALUE;
+    static GraphicsContext gc;
+    private static boolean capsOn = false;
+    private static double CURSOR_WIDTH = 2.0d;
+    private static double CURSOR_HEIGHT = 20.0d;
+    private static double X_PADDING = 2.0d;
+    private static double Y_PADDING = 10.0d;
+    private static int lineNumber = 0;
+    private static double initial_X = 0.0d, initial_Y = 30.0d;
+    private static double X = initial_X, Y = initial_Y;
+    private static double minCharWidth = Integer.MIN_VALUE;
+    private static double minCharHeight = Integer.MIN_VALUE;
     private Font font = new Font("Arial", 14);
     static LL buff = new LL();
     static double APP_WIDTH, APP_HEIGHT;
 
     TextState(GraphicsContext gc, ReadOnlyDoubleProperty w, ReadOnlyDoubleProperty h) {
-        this.gc = gc;
+        TextState.gc = gc;
         APP_WIDTH = w.getValue();
         APP_HEIGHT = h.getValue();
-        this.findFontDimensions();
-        this.CURSOR_HEIGHT = minCharHeight;
-        // this.X_PADDING = (0.05d * minCharWidth);
-        // this.Y_PADDING =  (0.05d * minCharHeight);
-        // this.initial_Y = Y_PADDING;
-        this.gc.setFont(font);
-        this.gc.setFill(Color.BLACK);
+        findFontDimensions();
+        CURSOR_HEIGHT = minCharHeight;
+        // X_PADDING = (0.05d * minCharWidth);
+        // Y_PADDING =  (0.05d * minCharHeight);
+        // initial_Y = Y_PADDING;
+        gc.setFont(font);
+        gc.setFill(Color.BLACK);
         capsOn = Toolkit.getDefaultToolkit().getLockingKeyState(java.awt.event.KeyEvent.VK_CAPS_LOCK);
         System.out.println("capsOn: " + capsOn);
 
-        this.drawCursor();
+        drawCursor();
     }
 
-    String alphabetToDraw(KeyCode k) {
+   static String alphabetToDraw(KeyCode k) {
         if (capsOn) {
             return k.getChar();
         } else {
@@ -50,43 +50,43 @@ public class TextState {
         }
     }
 
-    void calculateX() {
+    static void calculateX() {
         X = X + X_PADDING;
     }
 
-    void calculateY() {
+    static void calculateY() {
         Y = initial_Y + (lineNumber * (minCharHeight + Y_PADDING));
         if (Y + minCharHeight > APP_HEIGHT) {
-            Y = this.initial_Y;
+            Y = initial_Y;
             lineNumber = 0;
         }
     }
 
-    void calculateCursorPosition() {
-        this.calculateX();
+   static void calculateCursorPosition() {
+        calculateX();
         if (X + minCharWidth > APP_WIDTH) {
             X = 0;
             lineNumber++;
-            this.calculateY();
+            calculateY();
         }
         System.out.println("x: " + X + " y: " + Y + " line: " + lineNumber);
     }
 
-    void drawCursor() {
-        this.calculateCursorPosition();
-        this.gc.fillRect(X, Y - CURSOR_HEIGHT, CURSOR_WIDTH, CURSOR_HEIGHT);
+   static void drawCursor() {
+        calculateCursorPosition();
+        gc.fillRect(X, Y - CURSOR_HEIGHT, CURSOR_WIDTH, CURSOR_HEIGHT);
     }
 
-    void unDrawCursor() {
-        this.gc.clearRect(X, Y - CURSOR_HEIGHT, CURSOR_WIDTH, CURSOR_HEIGHT);
+    static void unDrawCursor() {
+        gc.clearRect(X, Y - CURSOR_HEIGHT, CURSOR_WIDTH, CURSOR_HEIGHT);
     }
 
-    void toggleCaps() {
-        this.capsOn = !this.capsOn;
+    static void toggleCaps() {
+        capsOn = !capsOn;
         System.out.println("capsOn toggle: " + capsOn);
     }
 
-    void handleKeyPress(KeyCode inp) {
+    static void handleKeyPress(KeyCode inp) {
         System.out.println(inp);
         if (inp == KeyCode.CAPS) {
             toggleCaps();
@@ -96,12 +96,34 @@ public class TextState {
         }
     }
 
-    void draw(KeyCode inp) {
-        this.unDrawCursor();
-        this.calculateCursorPosition();
-        gc.fillText(this.alphabetToDraw(inp), X, Y);
+    static void draw(KeyCode inp) {
+        unDrawCursor();
+        calculateCursorPosition();
+        gc.fillText(alphabetToDraw(inp), X, Y);
         X += minCharWidth;
-        this.drawCursor();
+        drawCursor();
+    }
+
+    static void setAppWidth(double d) {
+        APP_WIDTH = d;
+        redraw();
+    }
+    
+    static void setAppHeight(double d){
+        APP_HEIGHT= d;
+        redraw();
+    }
+
+    static void redraw() {
+        lineNumber = 0;
+        // gc.clearRect(0, 0, Double.MAX_VALUE, Double.MAX_VALUE);
+        X = initial_X;
+        Y = initial_Y;
+        Node curr = buff.getHead();
+        while(curr != null) {
+            draw(curr.k);
+            curr = curr.next;
+        }
     }
 
     void findFontDimensions() {

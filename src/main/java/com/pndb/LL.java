@@ -42,4 +42,8 @@ public class LL {
     int getSize() {
         return this.size;
     }
+    
+    Node getHead() {
+        return this.start;
+    }
 }

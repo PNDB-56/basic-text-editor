@@ -34,17 +34,19 @@ public class App extends Application {
         gc = canvas.getGraphicsContext2D();
         textState = new TextState(gc, pane.widthProperty(), pane.heightProperty());
         canvas.widthProperty().addListener((obs, oldVal, newVal) -> {
-            TextState.APP_WIDTH = newVal.doubleValue();
+            gc.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
+            TextState.setAppWidth(newVal.doubleValue());
         });
         canvas.heightProperty().addListener((obs, oldVal, newVal) -> {
-            TextState.APP_HEIGHT = newVal.doubleValue();
+            gc.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
+            TextState.setAppHeight(newVal.doubleValue());
         });
 
         pane.getChildren().add(canvas);
 
         canvas.setOnKeyPressed(event -> {
             // System.out.println("event ::" + event.getCode());
-            textState.handleKeyPress(event.getCode());
+            TextState.handleKeyPress(event.getCode());
         });
         stage.setScene(scene);
         stage.show();
