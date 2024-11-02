@@ -14,7 +14,7 @@ public class TextState {
     private static boolean capsOn = false;
     private static double CURSOR_WIDTH = 2.0d;
     private static double CURSOR_HEIGHT = 20.0d;
-    private static double X_PADDING = 2.0d;
+    private static double X_PADDING = 1.0d;
     private static double Y_PADDING = 10.0d;
     private static int lineNumber = 0, totalRows = 0, totalCols = 0;
     private static double initial_X = 0.0d, initial_Y = 30.0d;
@@ -75,7 +75,7 @@ public class TextState {
             lineNumber++;
         }
         calculateY();
-        System.out.println("x: " + X + " y: " + Y + " line: " + lineNumber);
+        // System.out.println("x: " + X + " y: " + Y + " line: " + lineNumber);
     }
 
     static void drawCursor() {
@@ -92,17 +92,18 @@ public class TextState {
     }
 
     static void handleKeyPress(KeyCode inp) {
-        System.out.println(inp);
-        draw(inp);
+        // System.out.println(inp);
+        draw(inp, true);
     }
 
-    static void draw(KeyCode inp) {
+    static void draw(KeyCode inp, Boolean addToBuff) {
         switch (inp) {
             case CAPS:
                 toggleCaps();
                 break;
             case ENTER:
-                buff.add(inp);
+                if (addToBuff)
+                    buff.add(inp);
                 unDrawCursor();
                 lineNumber++;
                 X = initial_X;
@@ -110,7 +111,8 @@ public class TextState {
                 drawCursor();
                 break;
             default:
-                buff.add(inp);
+                if (addToBuff)
+                    buff.add(inp);
                 unDrawCursor();
                 calculateCursorPosition();
                 gc.fillText(alphabetToDraw(inp), X, Y);
@@ -121,15 +123,19 @@ public class TextState {
     }
 
     static void setAppWidth(double d) {
-        APP_WIDTH = d;
-        calculateTotalRowsAndCols();
-        redraw();
+        if (d != APP_WIDTH) {
+            APP_WIDTH = d;
+            calculateTotalRowsAndCols();
+            redraw();
+        }
     }
 
     static void setAppHeight(double d) {
-        APP_HEIGHT = d;
-        calculateTotalRowsAndCols();
-        redraw();
+        if (d != APP_HEIGHT) {
+            APP_HEIGHT = d;
+            calculateTotalRowsAndCols();
+            redraw();
+        }
     }
 
     static void redraw() {
@@ -139,7 +145,7 @@ public class TextState {
         Y = initial_Y;
         Node curr = buff.getHead();
         while (curr != null) {
-            draw(curr.k);
+            draw(curr.k, false);
             curr = curr.next;
         }
     }
