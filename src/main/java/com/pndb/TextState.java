@@ -16,7 +16,7 @@ public class TextState {
     private static double CURSOR_HEIGHT = 20.0d;
     private static double X_PADDING = 2.0d;
     private static double Y_PADDING = 10.0d;
-    private static int lineNumber = 0;
+    private static int lineNumber = 0, totalRows = 0, totalCols = 0;
     private static double initial_X = 0.0d, initial_Y = 30.0d;
     private static double X = initial_X, Y = initial_Y;
     private static double minCharWidth = Integer.MIN_VALUE;
@@ -31,8 +31,9 @@ public class TextState {
         APP_HEIGHT = h.getValue();
         findFontDimensions();
         CURSOR_HEIGHT = minCharHeight;
+        calculateTotalRowsAndCols();
         // X_PADDING = (0.05d * minCharWidth);
-        // Y_PADDING =  (0.05d * minCharHeight);
+        // Y_PADDING = (0.05d * minCharHeight);
         // initial_Y = Y_PADDING;
         gc.setFont(font);
         gc.setFill(Color.BLACK);
@@ -42,7 +43,7 @@ public class TextState {
         drawCursor();
     }
 
-   static String alphabetToDraw(KeyCode k) {
+    static String alphabetToDraw(KeyCode k) {
         if (capsOn) {
             return k.getChar();
         } else {
@@ -62,18 +63,22 @@ public class TextState {
         }
     }
 
-   static void calculateCursorPosition() {
+    static void calculateTotalRowsAndCols() {
+        totalRows = (int) Math.floor((APP_HEIGHT - initial_Y) / (minCharHeight + Y_PADDING));
+        totalCols = (int) Math.floor((APP_WIDTH - X_PADDING - initial_X) / (minCharWidth + X_PADDING));
+    }
+
+    static void calculateCursorPosition() {
         calculateX();
         if (X + minCharWidth > APP_WIDTH) {
             X = 0;
             lineNumber++;
-            calculateY();
         }
+        calculateY();
         System.out.println("x: " + X + " y: " + Y + " line: " + lineNumber);
     }
 
-   static void drawCursor() {
-        calculateCursorPosition();
+    static void drawCursor() {
         gc.fillRect(X, Y - CURSOR_HEIGHT, CURSOR_WIDTH, CURSOR_HEIGHT);
     }
 
@@ -88,29 +93,42 @@ public class TextState {
 
     static void handleKeyPress(KeyCode inp) {
         System.out.println(inp);
-        if (inp == KeyCode.CAPS) {
-            toggleCaps();
-        } else {
-            buff.add(inp);
-            draw(inp);
-        }
+        draw(inp);
     }
 
     static void draw(KeyCode inp) {
-        unDrawCursor();
-        calculateCursorPosition();
-        gc.fillText(alphabetToDraw(inp), X, Y);
-        X += minCharWidth;
-        drawCursor();
+        switch (inp) {
+            case CAPS:
+                toggleCaps();
+                break;
+            case ENTER:
+                buff.add(inp);
+                unDrawCursor();
+                lineNumber++;
+                X = initial_X;
+                calculateCursorPosition();
+                drawCursor();
+                break;
+            default:
+                buff.add(inp);
+                unDrawCursor();
+                calculateCursorPosition();
+                gc.fillText(alphabetToDraw(inp), X, Y);
+                X += minCharWidth;
+                drawCursor();
+                break;
+        }
     }
 
     static void setAppWidth(double d) {
         APP_WIDTH = d;
+        calculateTotalRowsAndCols();
         redraw();
     }
-    
-    static void setAppHeight(double d){
-        APP_HEIGHT= d;
+
+    static void setAppHeight(double d) {
+        APP_HEIGHT = d;
+        calculateTotalRowsAndCols();
         redraw();
     }
 
@@ -120,7 +138,7 @@ public class TextState {
         X = initial_X;
         Y = initial_Y;
         Node curr = buff.getHead();
-        while(curr != null) {
+        while (curr != null) {
             draw(curr.k);
             curr = curr.next;
         }
